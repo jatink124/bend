@@ -1,8 +1,47 @@
 // netlify/functions/gemini.js
 
-// You might have utility functions for API calls in src/utils/index.js
-// Adjust the path as necessary.
-const { callGeminiAPI } = require('../../src/utils'); // Assuming a function like this exists
+// --- Utility function for Gemini API call (can be moved to src/utils/index.js) ---
+const callGeminiAPI = async (prompt) => {
+  const apiKey = process.env.GEMINI_API_KEY; // Get API key from Netlify environment variables
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY environment variable is not set.");
+  }
+
+  try {
+    const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+    const payload = { contents: chatHistory };
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Gemini API error response:', errorData);
+      throw new Error(`Gemini API request failed with status ${response.status}: ${JSON.stringify(errorData)}`);
+    }
+
+    const result = await response.json();
+
+    if (result.candidates && result.candidates.length > 0 &&
+        result.candidates[0].content && result.candidates[0].content.parts &&
+        result.candidates[0].content.parts.length > 0) {
+      return result.candidates[0].content.parts[0].text;
+    } else {
+      console.warn('Unexpected Gemini API response structure:', result);
+      return "No text response from Gemini API.";
+    }
+  } catch (error) {
+    console.error('Error calling Gemini API:', error);
+    throw new Error(`Failed to communicate with Gemini API: ${error.message}`);
+  }
+};
+// --- End of Utility function ---
+
 
 exports.handler = async (event, context) => {
   try {
@@ -41,11 +80,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Call your Gemini API utility function
-    // Ensure callGeminiAPI handles the actual fetch call and API key securely.
-    // Example: const geminiResponse = await callGeminiAPI(prompt, process.env.GEMINI_API_KEY);
-    // For now, let's simulate a response.
-    const geminiResponse = await callGeminiAPI(prompt); // Your actual API call here
+    const geminiResponse = await callGeminiAPI(prompt);
 
     return {
       statusCode: 200,
