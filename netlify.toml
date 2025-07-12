@@ -1,13 +1,13 @@
 [build]
-  command = "npm install"
-  publish = "."
+  command = "npm install" # Just install dependencies for functions
+  publish = "public"      # Or wherever your *frontend* static files are, if any.
+                          # For pure API, this might not be relevant, but a publish dir is required.
 
-[dev]
-  command = "npm run dev"
-  port = 5000
+[functions]
+  directory = "netlify/functions" # Tell Netlify where your functions are located
 
 [[redirects]]
   from = "/api/*"
-  to = "/src/server.js"
+  to = "/.netlify/functions/:splat" # Redirect to your Netlify Function(s)
   status = 200
   force = true
