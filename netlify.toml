@@ -1,13 +1,23 @@
 [build]
-  command = "npm install" # Just install dependencies for functions
-  publish = "public"      # Or wherever your *frontend* static files are, if any.
-                          # For pure API, this might not be relevant, but a publish dir is required.
+  command = "npm install" # Only install dependencies, no build step for functions themselves
+  publish = "public"      # A publish directory is still required. Create an empty 'public' folder
+                          # in your root if you don't have a frontend to deploy.
 
 [functions]
-  directory = "netlify/functions" # Tell Netlify where your functions are located
+  directory = "netlify/functions" # This tells Netlify where your functions are located
 
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat" # Redirect to your Netlify Function(s)
+  from = "/api/tasks/*"         # Requests to /api/tasks/anything
+  to = "/.netlify/functions/tasks" # Route them to your tasks.js function
   status = 200
   force = true
+
+[[redirects]]
+  from = "/api/gemini/*"        # Requests to /api/gemini/anything
+  to = "/.netlify/functions/gemini" # Route them to your gemini.js function
+  status = 200
+  force = true
+
+[dev]
+  command = "netlify dev" # Use Netlify CLI for local development with functions
+  port = 5000
